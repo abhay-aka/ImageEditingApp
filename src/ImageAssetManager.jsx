@@ -24,14 +24,14 @@ const ImageAssetManager = () => {
     const [images, setImages] = useState([]);
     const [selectedImage, setSelectedImage] = useState(null);
     const [isEditMode, setIsEditMode] = useState(false);
-    // const [isCroppingActive, setIsCroppingActive] = useState(false); // New state for cropping
+    const [isCroppingActive, setIsCroppingActive] = useState(false); // New state for cropping
     const [searchQuery, setSearchQuery] = useState('');
     const [imageTransforms, setImageTransforms] = useState({});
     const [imageMetadata, setImageMetadata] = useState({});
     const [crop, setCrop] = useState();
     const [completedCrop, setCompletedCrop] = useState();
     const imgRef = useRef(null);
-    // const canvasRef = useRef(null);
+    const canvasRef = useRef(null);
   
     const predefinedTags = ['fashion', 'sports', 'nature', 'technology', 'food', 'travel', 'art', 'music'];
   
@@ -104,21 +104,31 @@ const ImageAssetManager = () => {
     };
   
     const handleSave = async () => {
-      if (selectedImage && completedCrop?.width && completedCrop?.height) {
         try {
-          const croppedImageUrl = await getCroppedImg(imgRef.current, completedCrop);
-          const updatedImage = {
-            ...selectedImage,
-            url: croppedImageUrl,
-          };
+          let updatedImage = selectedImage; // Default to the original image if no crop is applied
+      
+          if (selectedImage && completedCrop?.width && completedCrop?.height) {
+            // console.log('is cropped')
+            // If cropping is applied, get the cropped image
+            const croppedImageUrl = await getCroppedImg(imgRef.current, completedCrop);
+            updatedImage = {
+              ...selectedImage,
+              url: croppedImageUrl,
+            };
+          }
+      
+          // Add the image (cropped or original) to the list
           setImages((prev) => [...prev, updatedImage]);
+      
+          // Reset the editor
           setIsEditMode(false);
           setSelectedImage(null);
+          setCrop(undefined); // Reset crop state
+          setCompletedCrop(undefined); // Reset completed crop state
         } catch (e) {
-          console.error('Error applying crop:', e);
+          console.error('Error saving image:', e);
         }
-      }
-    };
+      };
   const filteredImages = images.filter(image => {
     const metadata = imageMetadata[image.id];
     const searchLower = searchQuery.toLowerCase();
